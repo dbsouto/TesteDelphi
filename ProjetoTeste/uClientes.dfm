@@ -3,8 +3,8 @@ object frmClientes: TfrmClientes
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Clientes'
-  ClientHeight = 572
-  ClientWidth = 743
+  ClientHeight = 573
+  ClientWidth = 747
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

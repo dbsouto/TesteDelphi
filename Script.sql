@@ -113,7 +113,7 @@ BEGIN
 		NULLIF(@Bairro,''), 
 		NULLIF(@Cidade,''), 
 		NULLIF(@UF,''), 
-		NULLIF(@IdPais,0), 
+		NULLIF(@IdPais,'-1'), 
 		CONVERT(VARCHAR(10), GETDATE(), 103), 
 		@Ativo)
 END
@@ -136,7 +136,7 @@ BEGIN
 		Bairro = ISNULL(bairro,''),
 		Cidade = ISNULL(Cidade,''),
 		UF = ISNULL(UF,''),
-		IdPais = ISNULL(IdPais,0),
+		IdPais = ISNULL(IdPais,-1),
 		Data,
 		Ativo
 	FROM Cliente
@@ -174,7 +174,7 @@ BEGIN
 	Bairro = NULLIF(@Bairro,''),
 	Cidade = NULLIF(@Cidade,''),
 	UF = NULLIF(@UF,''),
-	IdPais = NULLIF(@IdPais,0),
+	IdPais = NULLIF(@IdPais,-1),
 	Ativo = @Ativo
 	WHERE IdCliente = @IdCliente
 

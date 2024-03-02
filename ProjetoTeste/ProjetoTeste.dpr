@@ -12,9 +12,7 @@ uses
   uControllerCliente in 'Controllers\uControllerCliente.pas',
   uControllerPais in 'Controllers\uControllerPais.pas',
   uControllerTelefone in 'Controllers\uControllerTelefone.pas',
-  uConsultaCliente in 'uConsultaCliente.pas' {frmConsultaCliente},
-  uValidation in 'Helper\uValidation.pas',
-  uType in 'Helper\uType.pas';
+  uConsultaCliente in 'uConsultaCliente.pas' {frmConsultaCliente};
 
 {$R *.res}
 

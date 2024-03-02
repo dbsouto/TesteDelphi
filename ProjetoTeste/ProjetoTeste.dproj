@@ -122,8 +122,6 @@
             <Form>frmConsultaCliente</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Helper\uValidation.pas"/>
-        <DCCReference Include="Helper\uType.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
