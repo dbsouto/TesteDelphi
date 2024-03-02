@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.Mask, System.StrUtils, Vcl.Grids, uControllerPais, Contnrs, uPais, uTelefone,
   uCliente, uControllerTelefone, System.Math, Xml.xmldom, Xml.XMLIntf,
   Xml.XMLDoc, Data.DB, Vcl.DBGrids, udmMSSQLServer, Data.Win.ADODB,
-  uController;
+  uController, uValidation, uType;
 
 type
   TfrmClientes = class(TForm)
@@ -87,7 +87,6 @@ type
     procedure LimpaCampos;
     procedure ConsultaTelefones;
     procedure MudaTipoPessoa;
-    function IsValidCNPJ(pCNPJ : string) : Boolean;
   public
     constructor Create(AOwner: TComponent;
      AControllerCliente: IController<TCliente>;
@@ -127,13 +126,12 @@ begin
   _novoCliente := false;
   _controllerPais := TControllerPais.Create;
   _controllerTelefone := TControllerTelefone.Create;
-  //_cliente := TCliente.Create;
   _telefoneList := TObjectList.Create;
   PaisList := TObjectList.Create;
 
   lbCpfCnpj.Caption := 'CPF';
   lbRGIE.Caption := 'RG';
-  mskCpfCnpj.EditMask := '000\.000\.000\-00;0;_';
+  mskCpfCnpj.EditMask := CPFMask;
 
   PaisList := _controllerPais.Select(nil);
 
@@ -173,77 +171,6 @@ begin
   DBGridTelefone.Enabled := valor;
 end;
 
-function TfrmClientes.IsValidCNPJ(pCNPJ: string): Boolean;
-var
-  v: array[1..2] of Word;
-  cnpj: array[1..14] of Byte;
-  I: Byte;
-begin
-  Result := False;
-
-  { Verificando se tem 11 caracteres }
-  if Length(pCNPJ) <> 14 then
-  begin
-    Exit;
-  end;
-
-  { Conferindo se todos dígitos são iguais }
-  if pCNPJ = StringOfChar('0', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('1', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('2', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('3', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('4', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('5', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('6', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('7', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('8', 14) then
-    Exit;
-
-  if pCNPJ = StringOfChar('9', 14) then
-    Exit;
-
-  try
-    for I := 1 to 14 do
-      cnpj[i] := StrToInt(pCNPJ[i]);
-
-    //Nota: Calcula o primeiro dígito de verificação.
-    v[1] := 5*cnpj[1] + 4*cnpj[2]  + 3*cnpj[3]  + 2*cnpj[4];
-    v[1] := v[1] + 9*cnpj[5] + 8*cnpj[6]  + 7*cnpj[7]  + 6*cnpj[8];
-    v[1] := v[1] + 5*cnpj[9] + 4*cnpj[10] + 3*cnpj[11] + 2*cnpj[12];
-    v[1] := 11 - v[1] mod 11;
-    v[1] := IfThen(v[1] >= 10, 0, v[1]);
-
-    //Nota: Calcula o segundo dígito de verificação.
-    v[2] := 6*cnpj[1] + 5*cnpj[2]  + 4*cnpj[3]  + 3*cnpj[4];
-    v[2] := v[2] + 2*cnpj[5] + 9*cnpj[6]  + 8*cnpj[7]  + 7*cnpj[8];
-    v[2] := v[2] + 6*cnpj[9] + 5*cnpj[10] + 4*cnpj[11] + 3*cnpj[12];
-    v[2] := v[2] + 2*v[1];
-    v[2] := 11 - v[2] mod 11;
-    v[2] := IfThen(v[2] >= 10, 0, v[2]);
-
-    //Nota: Verdadeiro se os dígitos de verificação são os esperados.
-    Result := ((v[1] = cnpj[13]) and (v[2] = cnpj[14]));
-  except on E: Exception do
-    Result := False;
-  end;
-end;
-
 procedure TfrmClientes.LimpaCampos;
 begin
   cmbPais.ItemIndex := -1;
@@ -274,15 +201,15 @@ begin
   begin
     lbCpfCnpj.Caption := 'CPF';
     lbRGIE.Caption := 'RG';
-    mskCpfCnpj.EditMask := '000\.000\.000\-00;0;_';
+    mskCpfCnpj.EditMask := CPFMask;
     mskRGIE.EditMask := '';
   end
   else
   begin
     lbCpfCnpj.Caption := 'CNPJ';
     lbRGIE.Caption := 'IE';
-    mskCpfCnpj.EditMask := '00\.000\.000\/0000\-00;0;_';
-    mskRGIE.EditMask := '000\.000\.000\.000;0;_';
+    mskCpfCnpj.EditMask := CNPJMask;
+    mskRGIE.EditMask := IEMask;
   end;
 end;
 
@@ -382,7 +309,7 @@ begin
 
   FreeAndNil(_cliente);
   _cliente := TCliente.Create;
-  _cliente.IdPais := -1;
+  _cliente.IdPais := 0;
   _controllerCliente.Insert(_cliente);
   with dmSQLServer do
   begin
@@ -425,7 +352,7 @@ begin
     edtBairro.Text := _cliente.Bairro;
     edtCidade.Text := _cliente.Cidade;
     edtUF.Text := _cliente.UF;
-    cmbPais.ItemIndex := _cliente.IdPais;
+    cmbPais.ItemIndex := _cliente.IdPais - 1;
 
     ConsultaTelefones;
   end;
@@ -456,7 +383,7 @@ begin
     Exit;
   end;
 
-  if (cmbTipoPessoa.ItemIndex = 1) and not IsValidCNPJ(mskCpfCnpj.Text) then
+  if (cmbTipoPessoa.ItemIndex = 1) and not TValidation.IsValidCNPJ(mskCpfCnpj.Text) then
   begin
     Application.MessageBox(PChar('CNPJ inválido!'), 'Aviso', MB_ICONERROR or MB_OK);
     mskCpfCnpj.SetFocus;
@@ -465,7 +392,7 @@ begin
 
   _controllerCliente := TControllerCliente.Create;
 
-  _cliente.IdPais := cmbPais.ItemIndex;
+  _cliente.IdPais := cmbPais.ItemIndex + 1;
   _cliente.TipoPessoa := IfThen(cmbTipoPessoa.ItemIndex = 0, 'F', 'J');
   _cliente.UF := edtUF.Text;
   _cliente.CPFCNPJ := mskCpfCnpj.Text;
