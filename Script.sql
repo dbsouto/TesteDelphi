@@ -236,7 +236,7 @@ BEGIN
 
 	IF OBJECT_ID('tempdb..#temp') IS NULL
 	BEGIN
-		RAISERROR('Tabela para cliente encontrada!',16,1)
+		RAISERROR('Tabela para cliente não encontrada!',16,1)
 		RETURN 1
 	END
 
