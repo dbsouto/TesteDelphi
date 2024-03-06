@@ -8,13 +8,13 @@ uses
   uController in 'Controllers\uController.pas',
   uCliente in 'Model\uCliente.pas',
   uPais in 'Model\uPais.pas',
-  uTelefone in 'Model\uTelefone.pas',
   uControllerCliente in 'Controllers\uControllerCliente.pas',
   uControllerPais in 'Controllers\uControllerPais.pas',
-  uControllerTelefone in 'Controllers\uControllerTelefone.pas',
   uConsultaCliente in 'uConsultaCliente.pas' {frmConsultaCliente},
   uValidation in 'Helper\uValidation.pas',
-  uType in 'Helper\uType.pas';
+  uControllerClienteTelefone in 'Controllers\uControllerClienteTelefone.pas',
+  uClienteTelefone in 'Model\uClienteTelefone.pas',
+  uGlobal in 'Helper\uGlobal.pas';
 
 {$R *.res}
 

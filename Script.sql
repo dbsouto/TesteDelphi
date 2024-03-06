@@ -40,14 +40,14 @@ ADD CONSTRAINT FK_Pais_Cliente
 FOREIGN KEY (IdPais) REFERENCES Pais(IdPais)
 GO
 
-CREATE TABLE [dbo].[Telefone](
-	[IdTelefone] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+CREATE TABLE [dbo].[ClienteTelefone](
+	[IdClienteTelefone] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
 	[IdCliente] [int] NOT NULL,
 	[DDD] [char](3) NOT NULL,
 	[Numero] [varchar](10) NOT NULL)
 GO
 
-ALTER TABLE Telefone
+ALTER TABLE ClienteTelefone
 ADD CONSTRAINT FK_Cliente_Telefone
 FOREIGN KEY (IdCliente) REFERENCES Cliente(IdCliente)
 GO
@@ -56,8 +56,8 @@ CREATE PROCEDURE [dbo].[sp_cliente_delete]
 	@IdCliente int
 AS
 BEGIN
-	DELETE FROM Telefone WHERE IdCliente = @IdCliente
-	DELETE FROM cliente WHERE IdCliente = @IdCliente
+	DELETE FROM ClienteTelefone WHERE IdCliente = @IdCliente
+	DELETE FROM Cliente WHERE IdCliente = @IdCliente
 END
 GO
 
@@ -74,7 +74,9 @@ CREATE PROCEDURE [dbo].[sp_cliente_insert]
 	@Cidade varchar(30) NULL,
 	@UF char(2) NULL,
 	@IdPais int NULL,
-	@Ativo char(1)
+	@Ativo char(1),
+	@IdCliente int OUTPUT,
+	@Data datetime OUTPUT
 AS
 BEGIN
 	IF EXISTS(SELECT 1 FROM Cliente WHERE NULLIF(CPFCNPJ,'') = @CPFCNPJ)
@@ -86,21 +88,10 @@ BEGIN
 	  RETURN 1
 	END
 
-	INSERT INTO Cliente 
-		(Nome,
-		TipoPessoa,
-		CPFCNPJ,
-		RG,
-		IE,
-		CEP,
-		Logradouro,
-		LogradouroNumero,
-		Bairro,
-		Cidade,
-		UF,
-		IdPais,
-		Data,
-		Ativo)
+	DECLARE @IdTable TABLE (Id INT, data DATETIME);
+
+	INSERT Cliente
+	OUTPUT INSERTED.IdCliente, INSERTED.Data INTO @IdTable
 	VALUES
 		(@Nome,
 		@TipoPessoa, 
@@ -115,7 +106,9 @@ BEGIN
 		NULLIF(@UF,''), 
 		NULLIF(@IdPais,0), 
 		CONVERT(VARCHAR(10), GETDATE(), 103), 
-		@Ativo)
+		@Ativo);
+
+	SELECT @IdCliente =  Id, @Data = data FROM @IdTable
 END
 GO
 
@@ -142,6 +135,7 @@ BEGIN
 	FROM Cliente
 	WHERE (Nome like '%' + ISNULL(@Nome, '') + '%' AND Ativo = '1')
 	OR   (NULLIF(@Nome, '') IS NULL AND Ativo = '1')
+	ORDER BY NOME	
 END
 GO
 
@@ -193,31 +187,81 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE [dbo].[sp_telefone_delete]
-	@IdTelefone int
+CREATE PROCEDURE [dbo].[sp_clientetelefone_delete]
+	@IdClienteTelefone int
 AS
 BEGIN
-	DELETE FROM Telefone WHERE IdTelefone = @IdTelefone
+	DELETE FROM ClienteTelefone WHERE IdClienteTelefone = @IdClienteTelefone
 END
 GO
 
-CREATE PROCEDURE [dbo].[sp_telefone_insert]
+CREATE PROCEDURE [dbo].[sp_clientetelefone_insert]
 	@IdCliente int,
 	@DDD char(3),
-	@Numero varchar(10)
+	@Numero varchar(10),
+	@IdClienteTelefone int OUTPUT
 AS
 BEGIN
-	INSERT INTO Telefone (IdCliente, DDD, Numero)
+	DECLARE @IdTable TABLE (Id INT);
+
+	INSERT INTO ClienteTelefone
+	OUTPUT inserted.IdClienteTelefone INTO @IdTable
 	VALUES (@IdCliente, @DDD, @Numero)
+
+	SELECT @IdClienteTelefone = Id FROM @IdTable
 END
 GO
 
-CREATE PROCEDURE [dbo].[sp_telefone_select]
+CREATE PROCEDURE [dbo].[sp_clientetelefone_select]
 	@IdCliente int
 AS
 BEGIN
-	SELECT IdTelefone, DDD, Numero FROM Telefone
+	SELECT IdClienteTelefone, DDD, Numero FROM ClienteTelefone
 	WHERE IdCliente = @IdCliente
+END
+GO
+
+CREATE PROCEDURE [dbo].[sp_clientetelefone_update]
+	@IdCliente int
+AS
+BEGIN
+	DECLARE @IdClienteTelefone INT, @DDD CHAR(3), @Numero VARCHAR(10)
+
+	DECLARE cr_telefone CURSOR FOR
+	SELECT IdClienteTelefone, DDD, Numero FROM ClienteTelefone WHERE IdCliente = @IdCliente
+
+	OPEN cr_telefone
+	FETCH NEXT FROM cr_telefone
+	INTO @IdClienteTelefone, @DDD, @Numero
+
+	IF OBJECT_ID('tempdb..#temp') IS NULL
+	BEGIN
+		RAISERROR('Tabela para cliente encontrada!',16,1)
+		RETURN 1
+	END
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		IF NOT EXISTS(SELECT 1 FROM #temp WHERE IdClienteTelefone = @IdClienteTelefone)
+			UPDATE ClienteTelefone SET Numero = 'delete' WHERE IdClienteTelefone = @IdClienteTelefone
+
+		FETCH NEXT FROM cr_telefone
+		INTO @IdClienteTelefone, @DDD, @Numero	
+	END
+
+	CLOSE cr_telefone
+	DEALLOCATE cr_telefone
+
+	DELETE FROM ClienteTelefone
+	WHERE IdCliente = @IdCliente
+	AND Numero = 'delete'
+
+	INSERT INTO ClienteTelefone
+	SELECT IdCliente, DDD, Numero FROM #temp
+	WHERE IdClienteTelefone = 0
+
+	IF OBJECT_ID('tempdb..#temp') IS NOT NULL
+		DROP TABLE #temp
 END
 GO
 

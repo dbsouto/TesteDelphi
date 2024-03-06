@@ -460,6 +460,7 @@ object frmClientes: TfrmClientes
     Font.Name = 'Segoe UI'
     Font.Style = []
     MaxLength = 2
+    NumbersOnly = True
     ParentFont = False
     TabOrder = 15
   end
@@ -474,6 +475,7 @@ object frmClientes: TfrmClientes
     Font.Name = 'Segoe UI'
     Font.Style = []
     MaxLength = 10
+    NumbersOnly = True
     ParentFont = False
     TabOrder = 16
   end
@@ -571,7 +573,7 @@ object frmClientes: TfrmClientes
     Top = 409
     Width = 388
     Height = 88
-    DataSource = ds_telefone
+    DataSource = dsMemTable
     Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
     TabOrder = 19
     TitleFont.Charset = DEFAULT_CHARSET
@@ -608,48 +610,60 @@ object frmClientes: TfrmClientes
   end
   object XMLDoc: TXMLDocument
     Left = 680
-    Top = 328
+    Top = 336
   end
-  object qr_telefone: TADOQuery
-    Connection = dmSQLServer.ADOConnection
-    CursorType = ctStatic
-    Parameters = <
+  object dsMemTable: TDataSource
+    AutoEdit = False
+    DataSet = memTable
+    Left = 680
+    Top = 392
+  end
+  object memTable: TFDMemTable
+    FieldDefs = <
+      item
+        Name = 'IdClienteTelefone'
+        DataType = ftInteger
+      end
       item
         Name = 'IdCliente'
-        Attributes = [paSigned]
         DataType = ftInteger
-        Precision = 10
-        Size = 4
-        Value = Null
+      end
+      item
+        Name = 'DDD'
+        DataType = ftString
+        Size = 3
+      end
+      item
+        Name = 'Numero'
+        DataType = ftString
+        Size = 10
       end>
-    Prepared = True
-    SQL.Strings = (
-      
-        'SELECT IdTelefone, IdCliente, DDD, Numero FROM Telefone WHERE Id' +
-        'Cliente = :IdCliente')
+    IndexDefs = <>
+    FetchOptions.AssignedValues = [evMode]
+    FetchOptions.Mode = fmAll
+    ResourceOptions.AssignedValues = [rvSilentMode]
+    ResourceOptions.SilentMode = True
+    UpdateOptions.AssignedValues = [uvCheckRequired, uvAutoCommitUpdates]
+    UpdateOptions.CheckRequired = False
+    UpdateOptions.AutoCommitUpdates = True
+    StoreDefs = True
     Left = 680
-    Top = 440
-    object qr_telefoneIdTelefone: TAutoIncField
-      FieldName = 'IdTelefone'
-      ReadOnly = True
+    Top = 448
+    object memTableIdClienteTelefone: TIntegerField
+      FieldName = 'IdClienteTelefone'
+      Visible = False
     end
-    object qr_telefoneIdCliente: TIntegerField
+    object memTableIdCliente: TIntegerField
       FieldName = 'IdCliente'
+      Visible = False
     end
-    object qr_telefoneDDD: TStringField
+    object memTableDDD: TStringField
       FieldName = 'DDD'
-      FixedChar = True
       Size = 3
     end
-    object qr_telefoneNumero: TStringField
+    object memTableNumero: TStringField
       FieldName = 'Numero'
       Size = 10
     end
-  end
-  object ds_telefone: TDataSource
-    AutoEdit = False
-    DataSet = qr_telefone
-    Left = 680
-    Top = 384
   end
 end

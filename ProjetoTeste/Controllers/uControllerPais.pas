@@ -2,36 +2,25 @@ unit uControllerPais;
 
 interface
 
-uses SysUtils, Contnrs, uController, uPais, udmMSSQLServer,
-Data.DB, System.Classes;
+uses SysUtils, System.Generics.Collections, uController, uPais, udmMSSQLServer;
 
 type
   TControllerPais = class(TInterfacedObject, IController<TPais>)
   public
-    procedure Delete(Objeto: TPais);
-    procedure Insert(Objeto: TPais);
-    function Select(Objeto: TPais): TObjectList;
-    function Update(Objeto: TPais): TPais;
+    function Select(Objeto: TPais): TEnumerable<TPais>;
+    procedure Insert(Objeto: TEnumerable<TPais>);
+    procedure Update(Objeto: TEnumerable<TPais>);
+    procedure Delete(Objeto: TEnumerable<TPais>);
   end;
 
 implementation
 
 { TControllerPais }
 
-procedure TControllerPais.Delete(Objeto: TPais);
-begin
-
-end;
-
-procedure TControllerPais.Insert(Objeto: TPais);
-begin
-
-end;
-
-function TControllerPais.Select(Objeto: TPais): TObjectList;
+function TControllerPais.Select(Objeto: TPais): TEnumerable<TPais>;
 var
-  Pais: TPais;
-  ObjectList: TObjectList;
+  Pais   : TPais;
+  outList: TObjectList<TPais>;
 begin
   with dmSQLServer.sp_pais_select do
   begin
@@ -39,9 +28,9 @@ begin
       Open;
 
       if not IsEmpty then
-        ObjectList := TObjectList.Create
+        outList := TObjectList<TPais>.Create
       else
-        ObjectList := nil;
+        outList := nil;
 
       while not Eof do
       begin
@@ -49,25 +38,38 @@ begin
         Pais.IdPais := FieldByName('IdPais').Value;
         Pais.Nome := FieldByName('Nome').Value;
 
-        ObjectList.Add(Pais);
+        outList.Add(Pais);
         Next;
       end;
-
-      Close;
     except
       On E: Exception do
       begin
+        outList.Clear;
+        FreeAndNil(outList);
+
         Raise Exception.Create(E.Message);
       end;
     end;
+
+    Close;
   end;
 
-  Result := ObjectList;
+  Result := outList;
 end;
 
-function TControllerPais.Update(Objeto: TPais): TPais;
+procedure TControllerPais.Insert(Objeto: TEnumerable<TPais>);
 begin
-  result := nil;
+
+end;
+
+procedure TControllerPais.Update(Objeto: TEnumerable<TPais>);
+begin
+
+end;
+
+procedure TControllerPais.Delete(Objeto: TEnumerable<TPais>);
+begin
+
 end;
 
 end.

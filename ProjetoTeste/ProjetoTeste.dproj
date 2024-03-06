@@ -84,6 +84,8 @@
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -93,6 +95,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -114,16 +118,16 @@
         <DCCReference Include="Controllers\uController.pas"/>
         <DCCReference Include="Model\uCliente.pas"/>
         <DCCReference Include="Model\uPais.pas"/>
-        <DCCReference Include="Model\uTelefone.pas"/>
         <DCCReference Include="Controllers\uControllerCliente.pas"/>
         <DCCReference Include="Controllers\uControllerPais.pas"/>
-        <DCCReference Include="Controllers\uControllerTelefone.pas"/>
         <DCCReference Include="uConsultaCliente.pas">
             <Form>frmConsultaCliente</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Helper\uValidation.pas"/>
-        <DCCReference Include="Helper\uType.pas"/>
+        <DCCReference Include="Controllers\uControllerClienteTelefone.pas"/>
+        <DCCReference Include="Model\uClienteTelefone.pas"/>
+        <DCCReference Include="Helper\uGlobal.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -144,6 +148,10 @@
                 <Source>
                     <Source Name="MainSource">ProjetoTeste.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="Win32\Debug\ProjetoTeste.exe" Configuration="Debug" Class="ProjectOutput">

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, uClientes, uControllerPais,
-  uControllerTelefone, uControllerCliente, Vcl.ComCtrls, Vcl.ToolWin,
+  uControllerClienteTelefone, uControllerCliente, Vcl.ComCtrls, Vcl.ToolWin,
   System.ImageList, Vcl.ImgList;
 
 type
@@ -19,9 +19,9 @@ type
     procedure mnuClientesClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
-    _controllerPais: TControllerPais;
-    _controllerTelefone: TControllerTelefone;
     _controllerCliente: TControllerCliente;
+    _controllerClienteTelefone: TControllerClienteTelefone;
+    _controllerPais: TControllerPais;
   public
     { Public declarations }
   end;
@@ -36,16 +36,15 @@ implementation
 procedure TfrmProjetoTeste.FormShow(Sender: TObject);
 begin
   _controllerCliente := TControllerCliente.Create;
-  _controllerTelefone := TControllerTelefone.Create;
-  _controllerCliente := TControllerCliente.Create;
+  _controllerClienteTelefone := TControllerClienteTelefone.Create;
+  _controllerPais := TControllerPais.Create;
 end;
 
 procedure TfrmProjetoTeste.mnuClientesClick(Sender: TObject);
 begin
   frmClientes := TfrmClientes.Create(Self, _controllerCliente,
-  _controllerTelefone, _controllerPais);
+  _controllerClienteTelefone, _controllerPais);
   frmClientes.ShowModal;
-  frmClientes.Free;
 end;
 
 procedure TfrmProjetoTeste.mnuSairClick(Sender: TObject);

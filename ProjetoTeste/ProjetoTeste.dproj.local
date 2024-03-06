@@ -11,8 +11,8 @@
     <Transaction>2024/02/27 16:24:36.000.135,D:\Delphi\ProjetoTeste\Unit1.dfm=D:\Delphi\ProjetoTeste\Conexao\udmConexao.dfm</Transaction>
     <Transaction>2024/02/27 17:13:03.000.904,D:\Delphi\ProjetoTeste\Conexao\udmConexao.pas=</Transaction>
     <Transaction>2024/02/27 17:13:27.000.588,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
-    <Transaction>2024/02/27 17:13:56.000.660,D:\Delphi\ProjetoTeste\Unit1.dfm=D:\Delphi\ProjetoTeste\Conexao\udmMSSQLServer.dfm</Transaction>
     <Transaction>2024/02/27 17:13:56.000.660,D:\Delphi\ProjetoTeste\Unit1.pas=D:\Delphi\ProjetoTeste\Conexao\udmMSSQLServer.pas</Transaction>
+    <Transaction>2024/02/27 17:13:56.000.660,D:\Delphi\ProjetoTeste\Unit1.dfm=D:\Delphi\ProjetoTeste\Conexao\udmMSSQLServer.dfm</Transaction>
     <Transaction>2024/02/27 21:21:25.000.926,=D:\Delphi\ProjetoTeste\Unit2.pas</Transaction>
     <Transaction>2024/02/27 21:24:11.000.918,D:\Delphi\ProjetoTeste\Unit2.dfm=D:\Delphi\ProjetoTeste\uClientes.dfm</Transaction>
     <Transaction>2024/02/27 21:24:11.000.918,D:\Delphi\ProjetoTeste\Unit2.pas=D:\Delphi\ProjetoTeste\uClientes.pas</Transaction>
@@ -38,8 +38,8 @@
     <Transaction>2024/02/28 09:34:35.000.457,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
     <Transaction>2024/02/28 09:34:45.000.954,D:\Delphi\ProjetoTeste\Controllers\uControllerTelefone.pas=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
     <Transaction>2024/02/28 10:11:41.000.284,=D:\Delphi\ProjetoTeste\Unit2.pas</Transaction>
-    <Transaction>2024/02/28 10:12:45.000.831,D:\Delphi\ProjetoTeste\uConsultaCliente.dfm=D:\Delphi\ProjetoTeste\Unit2.dfm</Transaction>
     <Transaction>2024/02/28 10:12:45.000.831,D:\Delphi\ProjetoTeste\uConsultaCliente.pas=D:\Delphi\ProjetoTeste\Unit2.pas</Transaction>
+    <Transaction>2024/02/28 10:12:45.000.831,D:\Delphi\ProjetoTeste\uConsultaCliente.dfm=D:\Delphi\ProjetoTeste\Unit2.dfm</Transaction>
     <Transaction>2024/03/02 11:25:23.000.299,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
     <Transaction>2024/03/02 11:25:40.000.345,D:\Delphi\ProjetoTeste\Unit1.pas=D:\Delphi\ProjetoTeste\Helper\uHelper.pas</Transaction>
     <Transaction>2024/03/02 11:46:34.000.537,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
@@ -47,5 +47,14 @@
     <Transaction>2024/03/02 11:49:34.000.332,D:\Delphi\ProjetoTeste\Helper\uHelper.pas=</Transaction>
     <Transaction>2024/03/02 13:06:01.000.058,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
     <Transaction>2024/03/02 13:06:09.000.902,D:\Delphi\ProjetoTeste\Unit1.pas=D:\Delphi\ProjetoTeste\Helper\uType.pas</Transaction>
+    <Transaction>2024/03/03 15:20:26.000.948,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
+    <Transaction>2024/03/03 15:20:41.000.482,D:\Delphi\ProjetoTeste\Controllers\uControllerClienteTelefone.pas=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
+    <Transaction>2024/03/03 15:23:03.000.472,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
+    <Transaction>2024/03/03 15:23:13.000.846,D:\Delphi\ProjetoTeste\Model\uClienteTelefone.pas=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
+    <Transaction>2024/03/03 15:45:09.000.881,D:\Delphi\ProjetoTeste\Controllers\uControllerTelefone.pas=</Transaction>
+    <Transaction>2024/03/03 15:45:15.000.914,D:\Delphi\ProjetoTeste\Model\uTelefone.pas=</Transaction>
+    <Transaction>2024/03/05 17:31:12.000.132,=D:\Delphi\ProjetoTeste\Unit1.pas</Transaction>
+    <Transaction>2024/03/05 17:31:21.000.364,D:\Delphi\ProjetoTeste\Unit1.pas=D:\Delphi\ProjetoTeste\Helper\uGlobal.pas</Transaction>
+    <Transaction>2024/03/05 17:31:40.000.830,D:\Delphi\ProjetoTeste\Helper\uType.pas=</Transaction>
   </Transactions>
 </BorlandProject>

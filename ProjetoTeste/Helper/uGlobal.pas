@@ -1,4 +1,4 @@
-unit uType;
+unit uGlobal;
 
 interface
 

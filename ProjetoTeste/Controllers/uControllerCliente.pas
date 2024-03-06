@@ -2,87 +2,36 @@ unit uControllerCliente;
 
 interface
 
-uses SysUtils, Contnrs, uController, uCliente, udmMSSQLServer;
+uses SysUtils, System.Generics.Collections, uController, uCliente, udmMSSQLServer;
 
 type
   TControllerCliente = class(TInterfacedObject, IController<TCliente>)
   public
-    procedure Delete(Objeto: TCliente);
-    procedure Insert(Objeto: TCliente);
-    function Select(Objeto: TCliente): TObjectList;
-    function Update(Objeto: TCliente): TCliente;
+    function Select(Objeto: TCliente): TEnumerable<TCliente>;
+    procedure Insert(Objeto: TEnumerable<TCliente>);
+    procedure Update(Objeto: TEnumerable<TCliente>);
+    procedure Delete(Objeto: TEnumerable<TCliente>);
   end;
 
 implementation
 
 { TControllerCliente }
 
-procedure TControllerCliente.Delete(Objeto: TCliente);
-begin
-  with dmSQLServer do
-  begin
-    try
-      ADOConnection.BeginTrans;
-      sp_cliente_delete.Parameters.ParamByName('@IdCliente').Value := Objeto.IdCliente;
-      sp_cliente_delete.ExecProc;
-      AdoConnection.CommitTrans;
-    except
-      On E: Exception do
-      begin
-        ADOConnection.RollbackTrans;
-        Raise Exception.Create(E.Message);
-      end;
-    end;
-  end;
-end;
-
-procedure TControllerCliente.Insert(Objeto: TCliente);
-begin
-  with dmSQLServer do
-  begin
-    try
-      ADOConnection.BeginTrans;
-      sp_cliente_insert.Parameters.ParamByName('@Nome').Value := Objeto.Nome;
-      sp_cliente_insert.Parameters.ParamByName('@TipoPessoa').Value := Objeto.TipoPessoa;
-      sp_cliente_insert.Parameters.ParamByName('@CPFCNPJ').Value := Objeto.CPFCNPJ;
-      sp_cliente_insert.Parameters.ParamByName('@RG').Value := Objeto.RG;
-      sp_cliente_insert.Parameters.ParamByName('@IE').Value := Objeto.IE;
-      sp_cliente_insert.Parameters.ParamByName('@CEP').Value := Objeto.CEP;
-      sp_cliente_insert.Parameters.ParamByName('@Logradouro').Value := Objeto.Logradouro;
-      sp_cliente_insert.Parameters.ParamByName('@LogradouroNumero').Value := Objeto.LogradouroNumero;
-      sp_cliente_insert.Parameters.ParamByName('@Bairro').Value := Objeto.Bairro;
-      sp_cliente_insert.Parameters.ParamByName('@Cidade').Value := Objeto.Cidade;
-      sp_cliente_insert.Parameters.ParamByName('@UF').Value := Objeto.UF;
-      sp_cliente_insert.Parameters.ParamByName('@IdPais').Value := Objeto.IdPais;
-      sp_cliente_insert.Parameters.ParamByName('@Ativo').Value := Objeto.Ativo;
-      sp_cliente_insert.ExecProc;
-      ADOConnection.CommitTrans;
-    except
-      On E: Exception do
-      begin
-        ADOConnection.RollbackTrans;
-        Raise Exception.Create(E.Message);
-      end;
-    end;
-  end;
-end;
-
-function TControllerCliente.Select(Objeto: TCliente): TObjectList;
+function TControllerCliente.Select(Objeto: TCliente): TEnumerable<TCliente>;
 var
-  Cliente: TCliente;
-  ObjectList: TObjectList;
+  Cliente : TCliente;
+  outList : TObjectList<TCliente>;
 begin
   with dmSQLServer.sp_cliente_select do
   begin
     try
       Parameters.ParamByName('@Nome').Value := Objeto.Nome;
-
       Open;
 
       if not IsEmpty then
-        ObjectList := TObjectList.Create
+        outList := TObjectList<TCliente>.Create
       else
-        ObjectList := nil;
+        outList := nil;
 
       while not Eof do
       begin
@@ -103,43 +52,123 @@ begin
         Cliente.Data := FieldByName('Data').Value;
         Cliente.Ativo := FieldByName('Ativo').Value;
 
-        ObjectList.Add(Cliente);
+        outList.Add(Cliente);
         Next;
       end;
-
-      Close;
     except
       On E: Exception do
       begin
+        outList.Clear;
+        FreeAndNil(outList);
+
         Raise Exception.Create(E.Message);
       end;
     end;
+
+    Close;
   end;
 
-  Result := ObjectList;
+  Result := outList;
 end;
 
-function TControllerCliente.Update(Objeto: TCliente): TCliente;
+procedure TControllerCliente.Insert(Objeto: TEnumerable<TCliente>);
+var
+  cliente : TCliente;
 begin
   with dmSQLServer do
   begin
     try
       ADOConnection.BeginTrans;
-      sp_cliente_update.Parameters.ParamByName('@IdCliente').Value := Objeto.IdCliente;
-      sp_cliente_update.Parameters.ParamByName('@Nome').Value := Objeto.Nome;
-      sp_cliente_update.Parameters.ParamByName('@TipoPessoa').Value := Objeto.TipoPessoa;
-      sp_cliente_update.Parameters.ParamByName('@CPFCNPJ').Value := Objeto.CPFCNPJ;
-      sp_cliente_update.Parameters.ParamByName('@RG').Value := Objeto.RG;
-      sp_cliente_update.Parameters.ParamByName('@IE').Value := Objeto.IE;
-      sp_cliente_update.Parameters.ParamByName('@CEP').Value := Objeto.CEP;
-      sp_cliente_update.Parameters.ParamByName('@Logradouro').Value := Objeto.Logradouro;
-      sp_cliente_update.Parameters.ParamByName('@LogradouroNumero').Value := Objeto.LogradouroNumero;
-      sp_cliente_update.Parameters.ParamByName('@Cidade').Value := Objeto.Cidade;
-      sp_cliente_update.Parameters.ParamByName('@Bairro').Value := Objeto.Bairro;
-      sp_cliente_update.Parameters.ParamByName('@UF').Value := Objeto.UF;
-      sp_cliente_update.Parameters.ParamByName('@IdPais').Value := Objeto.IdPais;
-      sp_cliente_update.Parameters.ParamByName('@Ativo').Value := Objeto.Ativo;
-      sp_cliente_update.ExecProc;
+
+      for cliente in Objeto do
+      begin
+        sp_cliente_insert.Parameters.ParamByName('@Nome').Value := cliente.Nome;
+        sp_cliente_insert.Parameters.ParamByName('@TipoPessoa').Value := cliente.TipoPessoa;
+        sp_cliente_insert.Parameters.ParamByName('@CPFCNPJ').Value := cliente.CPFCNPJ;
+        sp_cliente_insert.Parameters.ParamByName('@RG').Value := cliente.RG;
+        sp_cliente_insert.Parameters.ParamByName('@IE').Value := cliente.IE;
+        sp_cliente_insert.Parameters.ParamByName('@CEP').Value := cliente.CEP;
+        sp_cliente_insert.Parameters.ParamByName('@Logradouro').Value := cliente.Logradouro;
+        sp_cliente_insert.Parameters.ParamByName('@LogradouroNumero').Value := cliente.LogradouroNumero;
+        sp_cliente_insert.Parameters.ParamByName('@Bairro').Value := cliente.Bairro;
+        sp_cliente_insert.Parameters.ParamByName('@Cidade').Value := cliente.Cidade;
+        sp_cliente_insert.Parameters.ParamByName('@UF').Value := cliente.UF;
+        sp_cliente_insert.Parameters.ParamByName('@IdPais').Value := cliente.IdPais;
+        sp_cliente_insert.Parameters.ParamByName('@Ativo').Value := cliente.Ativo;
+        sp_cliente_insert.ExecProc;
+
+        cliente.IdCliente := sp_cliente_insert.Parameters.ParamByName('@IdCliente').Value;
+        cliente.Data := sp_cliente_insert.Parameters.ParamByName('@Data').Value;
+      end;
+
+      ADOConnection.CommitTrans;
+    except
+      On E: Exception do
+      begin
+        for cliente in Objeto do
+          cliente.IdCliente := 0;
+
+        ADOConnection.RollbackTrans;
+        Raise Exception.Create(E.Message);
+      end;
+    end;
+  end;
+end;
+
+procedure TControllerCliente.Update(Objeto: TEnumerable<TCliente>);
+var
+  cliente: TCliente;
+begin
+  with dmSQLServer do
+  begin
+    try
+      ADOConnection.BeginTrans;
+
+      for cliente in Objeto do
+      begin
+        sp_cliente_update.Parameters.ParamByName('@IdCliente').Value := cliente.IdCliente;
+        sp_cliente_update.Parameters.ParamByName('@Nome').Value := cliente.Nome;
+        sp_cliente_update.Parameters.ParamByName('@TipoPessoa').Value := cliente.TipoPessoa;
+        sp_cliente_update.Parameters.ParamByName('@CPFCNPJ').Value := cliente.CPFCNPJ;
+        sp_cliente_update.Parameters.ParamByName('@RG').Value := cliente.RG;
+        sp_cliente_update.Parameters.ParamByName('@IE').Value := cliente.IE;
+        sp_cliente_update.Parameters.ParamByName('@CEP').Value := cliente.CEP;
+        sp_cliente_update.Parameters.ParamByName('@Logradouro').Value := cliente.Logradouro;
+        sp_cliente_update.Parameters.ParamByName('@LogradouroNumero').Value := cliente.LogradouroNumero;
+        sp_cliente_update.Parameters.ParamByName('@Cidade').Value := cliente.Cidade;
+        sp_cliente_update.Parameters.ParamByName('@Bairro').Value := cliente.Bairro;
+        sp_cliente_update.Parameters.ParamByName('@UF').Value := cliente.UF;
+        sp_cliente_update.Parameters.ParamByName('@IdPais').Value := cliente.IdPais;
+        sp_cliente_update.Parameters.ParamByName('@Ativo').Value := cliente.Ativo;
+        sp_cliente_update.ExecProc;
+      end;
+
+      AdoConnection.CommitTrans;
+    except
+      On E: Exception do
+      begin
+        ADOConnection.RollbackTrans;
+        Raise Exception.Create(E.Message);
+      end;
+    end;
+  end;
+end;
+
+procedure TControllerCliente.Delete(Objeto: TEnumerable<TCliente>);
+var
+  cliente: TCliente;
+begin
+  with dmSQLServer do
+  begin
+    try
+      ADOConnection.BeginTrans;
+
+      for cliente in Objeto do
+      begin
+        sp_cliente_delete.Parameters.ParamByName('@IdCliente').Value := cliente.IdCliente;
+        sp_cliente_delete.ExecProc;
+      end;
+
       AdoConnection.CommitTrans;
     except
       On E: Exception do

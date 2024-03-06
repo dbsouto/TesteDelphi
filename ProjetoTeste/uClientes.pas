@@ -5,10 +5,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, uConsultaCliente, uControllerCliente,
-  Vcl.ExtCtrls, Vcl.Mask, System.StrUtils, Vcl.Grids, uControllerPais, Contnrs, uPais, uTelefone,
-  uCliente, uControllerTelefone, System.Math, Xml.xmldom, Xml.XMLIntf,
-  Xml.XMLDoc, Data.DB, Vcl.DBGrids, udmMSSQLServer, Data.Win.ADODB,
-  uController, uValidation, uType;
+  Vcl.ExtCtrls, Vcl.Mask, System.StrUtils, Vcl.Grids, uControllerPais, uPais, uClienteTelefone,
+  uCliente, uControllerClienteTelefone, System.Math, Xml.xmldom, Xml.XMLIntf,
+  Xml.XMLDoc, Data.DB, Vcl.DBGrids, udmMSSQLServer, Data.Win.ADODB, System.Generics.Collections,
+  uController, uValidation, uGlobal, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Param, FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf,
+  FireDAC.DApt.Intf, FireDAC.Comp.DataSet, FireDAC.Comp.Client;
 
 type
   TfrmClientes = class(TForm)
@@ -56,13 +58,13 @@ type
     XMLDoc: TXMLDocument;
     edtUF: TEdit;
     DBGridTelefone: TDBGrid;
-    qr_telefone: TADOQuery;
-    ds_telefone: TDataSource;
-    qr_telefoneIdTelefone: TAutoIncField;
-    qr_telefoneIdCliente: TIntegerField;
-    qr_telefoneDDD: TStringField;
-    qr_telefoneNumero: TStringField;
+    dsMemTable: TDataSource;
     btnAlterar: TButton;
+    memTable: TFDMemTable;
+    memTableIdClienteTelefone: TIntegerField;
+    memTableIdCliente: TIntegerField;
+    memTableDDD: TStringField;
+    memTableNumero: TStringField;
     procedure btnConsultarClick(Sender: TObject);
     procedure cmbTipoPessoaChange(Sender: TObject);
     procedure btnNovoClick(Sender: TObject);
@@ -79,18 +81,18 @@ type
   private
     _novoCliente: Boolean;
     _controllerPais: IController<TPais>;
-    _controllerTelefone: IController<TTelefone>;
+    _controllerClienteTelefone: IController<TClienteTelefone>;
     _controllerCliente: IController<TCliente>;
     _cliente: TCliente;
-    _telefoneList: TObjectList;
     procedure HabilitaObjetos(valor: Boolean);
     procedure LimpaCampos;
     procedure ConsultaTelefones;
     procedure MudaTipoPessoa;
+    procedure ExibirInfoCliente;
   public
     constructor Create(AOwner: TComponent;
      AControllerCliente: IController<TCliente>;
-     AControllerTelefone: IController<TTelefone>;
+     AControllerClienteTelefone: IController<TClienteTelefone>;
      AControllerPais: IController<TPais>); overload;
   end;
 
@@ -103,13 +105,32 @@ implementation
 
 constructor TfrmClientes.Create(AOwner: TComponent;
   AControllerCliente: IController<TCliente>;
-  AControllerTelefone: IController<TTelefone>;
+  AControllerClienteTelefone: IController<TClienteTelefone>;
   AControllerPais: IController<TPais>);
 begin
   inherited Create(AOwner);
   _controllerCliente := AControllerCliente;
-  _controllerTelefone := AControllerTelefone;
+  _controllerClienteTelefone := AControllerClienteTelefone;
   _controllerPais := AControllerPais;
+end;
+
+procedure TfrmClientes.ExibirInfoCliente;
+begin
+    LimpaCampos;
+    edtNomeCliente.Text := _cliente.Nome;
+    cmbTipoPessoa.ItemIndex := IfThen(_cliente.TipoPessoa = 'F', 0, 1);
+    MudaTipoPessoa;
+    mskCpfCnpj.Text := _cliente.CPFCNPJ;
+    mskRGIE.Text := IfThen(_cliente.TipoPessoa = 'F', _cliente.RG, _cliente.IE);
+    chkAtivo.Checked := _cliente.Ativo = '1';
+    mskDataCadastro.Text := FormatDateTime('dd/mm/yyyy',_cliente.Data);
+    mskCEP.Text := _cliente.CEP;
+    edtLogradouro.Text := _cliente.Logradouro;
+    edtLogradouroNumero.Text := _cliente.LogradouroNumero;
+    edtBairro.Text := _cliente.Bairro;
+    edtCidade.Text := _cliente.Cidade;
+    edtUF.Text := _cliente.UF;
+    cmbPais.ItemIndex := _cliente.IdPais - 1;
 end;
 
 procedure TfrmClientes.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -121,19 +142,16 @@ end;
 procedure TfrmClientes.FormShow(Sender: TObject);
 var
   i: Integer;
-  PaisList: TObjectList;
+  PaisList: TObjectList<TPais>;
 begin
   _novoCliente := false;
-  _controllerPais := TControllerPais.Create;
-  _controllerTelefone := TControllerTelefone.Create;
-  _telefoneList := TObjectList.Create;
-  PaisList := TObjectList.Create;
+  PaisList := TObjectList<TPais>.Create;
 
   lbCpfCnpj.Caption := 'CPF';
   lbRGIE.Caption := 'RG';
   mskCpfCnpj.EditMask := CPFMask;
 
-  PaisList := _controllerPais.Select(nil);
+  PaisList := TObjectList<TPais>(_controllerPais.Select(nil));
 
   for i := 0 to PaisList.Count - 1 do
   begin
@@ -142,8 +160,10 @@ begin
       TPais(PaisList.Items[i]));
   end;
 
-  cmbPais.ItemIndex := -1;
+  PaisList.Clear;
+  FreeAndNil(PaisList);
 
+  cmbPais.ItemIndex := -1;
   HabilitaObjetos(false);
 end;
 
@@ -227,16 +247,12 @@ begin
 end;
 
 procedure TfrmClientes.btnBuscaCEPClick(Sender: TObject);
-
 begin
-    if mskCEP.Text = '' then
-    begin
-      Application.MessageBox(PChar('Informe um CEP'), 'Aviso', MB_ICONEXCLAMATION or MB_OK);
-      mskCEP.SetFocus;
-      Exit;
-    end;
+  if mskCEP.Text = '' then
+    Exit;
 
   try
+    Cursor := crHourGlass;
     XMLDoc.FileName := 'https://viacep.com.br/ws/'+ mskCEP.Text + '/xml/';
     XMLDoc.Active := true;
   finally
@@ -254,14 +270,15 @@ begin
       edtUF.Text := XMLDoc.DocumentElement.ChildNodes['uf'].Text;
     end;
 
+    Cursor := crDefault;
     XMLDoc.Active := false;
   end;
 end;
 
 procedure TfrmClientes.btnCancelarClick(Sender: TObject);
 begin
-  if _novoCliente then
-    _controllerCliente.Delete(_cliente);
+  LimpaCampos;
+  memTable.Close;
 
   _novoCliente := false;
   HabilitaObjetos(false);
@@ -274,13 +291,18 @@ begin
 end;
 
 procedure TfrmClientes.btnExcluirClick(Sender: TObject);
+var
+  list: TList<TCliente>;
 begin
   if Application.MessageBox(PChar('Confirma a exclusão do cliente?'), 'Aviso', MB_ICONQUESTION or MB_YESNO) = IDYES then
   begin
-     _controllerCliente := TControllerCliente.Create;
-
     try
-      _controllerCliente.Delete(_cliente);
+      list := TList<TCliente>.create;
+      list.Add(_cliente);
+
+      _controllerCliente.Delete(list);
+
+      FreeAndNil(list);
     except
         On E: Exception do
         begin
@@ -289,7 +311,9 @@ begin
         end;
     end;
 
+    LimpaCampos;
     HabilitaObjetos(false);
+    memTable.Close;
 
     btnNovo.Enabled := true;
     btnSalvar.Enabled := false;
@@ -302,22 +326,14 @@ procedure TfrmClientes.btnNovoClick(Sender: TObject);
 begin
   _novoCliente := true;
 
+  FreeAndNil(_cliente);
+  _cliente := TCliente.Create;
+
   LimpaCampos;
   HabilitaObjetos(true);
 
-  qr_telefone.Close;
-
-  FreeAndNil(_cliente);
-  _cliente := TCliente.Create;
-  _cliente.IdPais := 0;
-  _controllerCliente.Insert(_cliente);
-  with dmSQLServer do
-  begin
-    qrAux.SQL.Text := 'SELECT TOP 1 IdCliente FROM cliente ORDER BY IdCliente DESC';
-    qrAux.Open;
-    _cliente.IdCliente := dmSQLServer.qrAux.FieldByName('IdCliente').AsInteger;
-    qrAux.Close;
-  end;
+  memTable.Open;
+  memTable.Edit;
 
   btnExcluir.Enabled := false;
   btnSalvar.Enabled := true;
@@ -331,29 +347,14 @@ begin
   begin
     _novoCliente := false;
 
-    btnNovo.Enabled := false;
+    btnNovo.Enabled := true;
     btnAlterar.Enabled := true;
     btnExcluir.Enabled := true;
 
     FreeAndNil(_cliente);
     _cliente := frmConsultaCliente.Cliente;
 
-    LimpaCampos;
-    edtNomeCliente.Text := _cliente.Nome;
-    cmbTipoPessoa.ItemIndex := IfThen(_cliente.TipoPessoa = 'F', 0, 1);
-    MudaTipoPessoa;
-    mskCpfCnpj.Text := _cliente.CPFCNPJ;
-    mskRGIE.Text := IfThen(_cliente.TipoPessoa = 'F', _cliente.RG, _cliente.IE);
-    chkAtivo.Checked := _cliente.Ativo = '1';
-    mskDataCadastro.Text := FormatDateTime('dd/mm/yyyy',_cliente.Data);
-    mskCEP.Text := _cliente.CEP;
-    edtLogradouro.Text := _cliente.Logradouro;
-    edtLogradouroNumero.Text := _cliente.LogradouroNumero;
-    edtBairro.Text := _cliente.Bairro;
-    edtCidade.Text := _cliente.Cidade;
-    edtUF.Text := _cliente.UF;
-    cmbPais.ItemIndex := _cliente.IdPais - 1;
-
+    ExibirInfoCliente;
     ConsultaTelefones;
   end;
 
@@ -361,6 +362,10 @@ begin
 end;
 
 procedure TfrmClientes.btnSalvarClick(Sender: TObject);
+var
+  telefone: TClienteTelefone;
+  listCli : TList<TCliente>;
+  listTel : TObjectList<TClienteTelefone>;
 begin
   if edtNomeCliente.Text = '' then
   begin
@@ -390,9 +395,10 @@ begin
     Exit;
   end;
 
-  _controllerCliente := TControllerCliente.Create;
+  listCli := TList<TCliente>.Create;
+  listTel := TObjectList<TClienteTelefone>.create;
 
-  _cliente.IdPais := cmbPais.ItemIndex + 1;
+  _cliente.Nome := edtNomeCliente.Text;
   _cliente.TipoPessoa := IfThen(cmbTipoPessoa.ItemIndex = 0, 'F', 'J');
   _cliente.UF := edtUF.Text;
   _cliente.CPFCNPJ := mskCpfCnpj.Text;
@@ -412,10 +418,52 @@ begin
   _cliente.Cidade := edtCidade.Text;
   _cliente.Logradouro := edtLogradouro.Text;
   _cliente.LogradouroNumero := edtLogradouroNumero.Text;
-  _cliente.Nome := edtNomeCliente.Text;
+  _cliente.IdPais := cmbPais.ItemIndex + 1;
+
+  listCli.Add(_cliente);
 
   try
-    _controllerCliente.Update(_cliente);
+    if memTable.RecordCount > 0 then
+    begin
+      memTable.First;
+
+      while not memTable.Eof do
+      begin
+        telefone := TClienteTelefone.Create;
+        telefone.IdClienteTelefone := memTableIdClienteTelefone.AsInteger;
+        telefone.IdCliente := memTableIdCliente.AsInteger;
+        telefone.DDD := memTableDDD.AsString;
+        telefone.Numero := memTableNumero.AsString;
+
+        listTel.Add(telefone);
+        memTable.Next;
+      end;
+    end;
+
+    if _novoCliente then
+    begin
+       _controllerCliente.Insert(listCli);
+
+       if memTable.RecordCount > 0 then
+         for telefone in listTel do
+           telefone.IdCliente := _cliente.IdCliente;
+
+       mskDataCadastro.Text := FormatDateTime('dd/mm/yyyy',_cliente.Data);
+
+      _controllerClienteTelefone.Insert(listTel);
+    end
+    else
+    begin
+      if memTable.RecordCount = 0 then
+      begin
+        telefone := TClienteTelefone.Create;
+        telefone.IdCliente := _cliente.IdCliente;
+        listTel.Add(telefone);
+      end;
+
+      _controllerCliente.Update(listCli);
+      _controllerClienteTelefone.Update(listTel);
+    end;
   except
       On E: Exception do
       begin
@@ -424,17 +472,26 @@ begin
       end;
   end;
 
+  listTel.Clear;
+  FreeAndNil(listCli);
+  FreeAndNil(listTel);
+
+  _novoCliente := false;
+
+  //LimpaCampos;
+  HabilitaObjetos(false);
+
   btnNovo.Enabled := true;
   btnAlterar.Enabled := true;
+  btnExcluir.Enabled := true;
   btnSalvar.Enabled := false;
   btnCancelar.Enabled := false;
-  btnExcluir.Enabled := false;
 end;
 
 procedure TfrmClientes.btnTelefoneAdicionaClick(Sender: TObject);
 var
   i: Integer;
-  Telefone: TTelefone;
+  ClienteTelefone: TClienteTelefone;
 begin
   if edtTelefoneDDD.Text = '' then
   begin
@@ -449,25 +506,22 @@ begin
     Exit;
   end;
 
-  qr_telefone.Close;
+  memTable.Append;
+  memTable.FieldByName('IdCliente').Value := _cliente.IdCliente;
+  memTable.FieldByName('DDD').Value := edtTelefoneDDD.Text;
+  memTable.FieldByName('Numero').Value := edtTelefoneNumero.Text;
+  memTable.Post;
 
-  Telefone := TTelefone.Create;
-  Telefone.IdCliente := _cliente.IdCliente;
-  Telefone.DDD := edtTelefoneDDD.Text;
-  Telefone.Numero := edtTelefoneNumero.Text;
-
-  _controllerTelefone.Insert(Telefone);
+  btnTelefoneRemove.Enabled := memTable.RecordCount > 0;
 
   edtTelefoneDDD.Text := '';
   edtTelefoneNumero.Text := '';
-
-  ConsultaTelefones;
 end;
 
 procedure TfrmClientes.btnTelefoneRemoveClick(Sender: TObject);
 begin
-  qr_telefone.delete;
-  btnTelefoneRemove.Enabled := qr_telefone.RecordCount > 0;
+  memTable.Delete;
+  btnTelefoneRemove.Enabled := memTable.RecordCount > 0;
 end;
 
 procedure TfrmClientes.cmbTipoPessoaChange(Sender: TObject);
@@ -477,15 +531,37 @@ end;
 
 procedure TfrmClientes.ConsultaTelefones;
 var
-  i: Integer;
-  Telefone: TTelefone;
+  Telefone: TClienteTelefone;
+  t: TClienteTelefone;
+  listTelefone: TobjectList<TClienteTelefone>;
 begin
-  qr_telefone.Close;
-  qr_telefone.Parameters.ParamByName('IdCliente').Value := _cliente.IdCliente;
-  qr_telefone.Open;
+  Telefone := TClienteTelefone.Create;
+  Telefone.IdCliente := _cliente.IdCliente;
+
+  listTelefone := TobjectList<TClienteTelefone>(_controllerClienteTelefone.Select(Telefone));
+
+  memTable.Close;
+  memTable.Open;
+  memTable.Edit;
+
+  if Assigned(listTelefone) then
+  begin
+    for t in listTelefone do
+    begin
+      memTable.Append;
+      memTableIdClienteTelefone.AsInteger := t.IdClienteTelefone;
+      memTableIdCliente.AsInteger := t.IdCliente;
+      memTableDDD.AsString := t.DDD;
+      memTableNumero.AsString := t.Numero;
+      memTable.Post;
+    end;
+
+    listTelefone.Clear;
+    FreeAndNil(listTelefone);
+  end;
 
   if btnSalvar.Enabled then
-    btnTelefoneRemove.Enabled := qr_telefone.RecordCount > 0;
+    btnTelefoneRemove.Enabled := memTable.RecordCount > 0;
 end;
 
 end.
